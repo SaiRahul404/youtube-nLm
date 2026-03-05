@@ -1,0 +1,13 @@
+# YouTube Monitoring Dependencies
+google-api-python-client==2.108.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+
+# File locking for state management
+filelock==3.13.1
+
+# Environment variable management
+python-dotenv==1.0.0
+
+# NotebookLM CLI (installed separately via npm)
+# npm install -g notebooklm-mcp-cli
