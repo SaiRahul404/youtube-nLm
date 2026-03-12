@@ -6,9 +6,10 @@ Automated YouTube channel monitoring system that processes new videos through No
 
 This POC automatically:
 1. Monitors the MoneyPurse YouTube channel for new uploads
-2. Adds new videos as sources to a NotebookLM notebook
-3. Runs AI analysis on the video content
-4. Emails the insights to a specified recipient
+2. Clears existing sources from the NotebookLM notebook (ensures focused analysis)
+3. Adds the new video as the only source to the notebook
+4. Runs AI analysis on the video content
+5. Emails the insights to specified recipients
 
 ## 📋 Prerequisites
 
@@ -88,6 +89,7 @@ EMAIL_SMTP_PORT=465
 EMAIL_SENDER=your_email@gmail.com
 EMAIL_PASSWORD=your_app_password_here
 EMAIL_RECIPIENT=recipient@example.com
+# For multiple recipients: EMAIL_RECIPIENT=email1@example.com,email2@example.com
 NOTEBOOKLM_PROMPT=Analyze this video and provide key insights, takeaways, and actionable recommendations.
 ```
 
@@ -249,6 +251,12 @@ del %USERPROFILE%\.youtube_notebooklm\processed_videos.json
 - **~50 queries/day** on free tier (approximately 25 videos/day)
 - Recommended polling interval: **1-2 hours**
 - Script processes one video at a time
+
+### Source Management
+- **All existing sources are cleared** before each new video is added
+- This ensures focused AI analysis on a single video
+- The notebook will only contain the most recently processed video
+- Previous video sources are permanently removed from the notebook
 
 ### Authentication Brittleness
 - NotebookLM sessions expire frequently

@@ -57,11 +57,20 @@ nlm login
 # Check authentication status
 nlm login --check
 
-# Add source to notebook
+# List sources in notebook
+nlm source list YOUR_NOTEBOOK_ID --json
+
+# Add source to notebook (script auto-clears old sources first)
 nlm source add YOUR_NOTEBOOK_ID --url "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Delete a source
+nlm source delete SOURCE_ID --confirm
 
 # Query notebook
 nlm notebook query YOUR_NOTEBOOK_ID "Your prompt here"
+
+# Test source management
+python test_source_management.py
 ```
 
 ### State Management

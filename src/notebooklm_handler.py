@@ -192,9 +192,108 @@ class NotebookLMHandler:
             logger.error(f"Error checking authentication: {e}")
             return False
     
+    def list_sources(self) -> Optional[list]:
+        """
+        List all sources in the notebook.
+        
+        Returns:
+            List of source dictionaries or None if failed
+        """
+        logger.info("Listing all sources in notebook")
+        
+        # Ensure authenticated
+        if not self.ensure_authenticated():
+            logger.error("Cannot list sources: not authenticated")
+            return None
+        
+        command = ["nlm", "source", "list", self.notebook_id, "--json"]
+        success, output = self._run_command(command)
+        
+        if success:
+            try:
+                sources = json.loads(output)
+                logger.info(f"Found {len(sources)} source(s) in notebook")
+                return sources
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse sources JSON: {e}")
+                return None
+        else:
+            logger.error(f"Failed to list sources: {output}")
+            return None
+    
+    def delete_source(self, source_id: str) -> bool:
+        """
+        Delete a source from the notebook.
+        
+        Args:
+            source_id: Source ID to delete
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        logger.info(f"Deleting source: {source_id}")
+        
+        # Ensure authenticated
+        if not self.ensure_authenticated():
+            logger.error("Cannot delete source: not authenticated")
+            return False
+        
+        command = ["nlm", "source", "delete", source_id, "--confirm"]
+        success, output = self._run_command(command)
+        
+        if success:
+            logger.info(f"Successfully deleted source: {source_id}")
+            return True
+        else:
+            logger.error(f"Failed to delete source: {output}")
+            return False
+    
+    def clear_all_sources(self) -> bool:
+        """
+        Remove all sources from the notebook.
+        
+        Returns:
+            True if all sources cleared successfully, False otherwise
+        """
+        logger.info("Clearing all sources from notebook")
+        
+        # Get list of all sources
+        sources = self.list_sources()
+        
+        if sources is None:
+            logger.error("Failed to get source list")
+            return False
+        
+        if len(sources) == 0:
+            logger.info("No sources to clear")
+            return True
+        
+        # Delete each source
+        all_deleted = True
+        for source in sources:
+            source_id = source.get('id')
+            if source_id:
+                if not self.delete_source(source_id):
+                    logger.warning(f"Failed to delete source {source_id}")
+                    all_deleted = False
+                else:
+                    # Small delay between deletions
+                    time.sleep(1)
+            else:
+                logger.warning(f"Source missing ID: {source}")
+                all_deleted = False
+        
+        if all_deleted:
+            logger.info("Successfully cleared all sources")
+        else:
+            logger.warning("Some sources may not have been deleted")
+        
+        return all_deleted
+    
     def add_source(self, video_url: str) -> bool:
         """
         Add a video URL as a source to the notebook.
+        Clears all existing sources before adding the new one.
         
         Args:
             video_url: YouTube video URL
@@ -209,6 +308,12 @@ class NotebookLMHandler:
             logger.error("Cannot add source: not authenticated")
             return False
         
+        # Clear all existing sources first
+        logger.info("Clearing existing sources before adding new video")
+        if not self.clear_all_sources():
+            logger.warning("Failed to clear all sources, but continuing with add...")
+        
+        # Add new source
         command = ["nlm", "source", "add", self.notebook_id, "--url", video_url]
         success, output = self._run_command(command)
         
